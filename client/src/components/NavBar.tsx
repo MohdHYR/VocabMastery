@@ -86,14 +86,19 @@ export function NavBar() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button 
-              onClick={() => window.location.href = "/admin"} 
-              variant="default"
-              className="gap-2"
-            >
-              <UserIcon className="h-4 w-4" />
-              Admin Login
-            </Button>
+            <div className="flex items-center gap-2">
+              <Link href="/auth">
+                <Button variant="outline" size="sm" className="gap-2">
+                  <UserIcon className="h-4 w-4" />
+                  Student Sign In
+                </Button>
+              </Link>
+              <Link href="/admin">
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">
+                  Teacher Login
+                </Button>
+              </Link>
+            </div>
           )}
         </div>
       </div>

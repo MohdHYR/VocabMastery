@@ -13,9 +13,13 @@ import { Loader2, ArrowRight, Check, X, Trophy, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Vocabulary } from "@shared/schema";
 
+import { useAuth } from "@/hooks/use-auth";
+import { Link } from "wouter";
+
 type Step = "select" | "learning" | "dictation" | "mcq" | "summary";
 
 export default function Learn() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [step, setStep] = useState<Step>("select");
   const [selectedGrade, setSelectedGrade] = useState<string>("");
   const [selectedUnit, setSelectedUnit] = useState<string>("");
@@ -39,6 +43,32 @@ export default function Learn() {
     setSelectedGrade("");
     setSelectedUnit("");
   };
+
+  if (authLoading) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-background">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-background px-4">
+        <Card className="w-full max-w-md text-center">
+          <CardHeader>
+            <CardTitle>Sign In Required</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground">Please sign in to start your learning journey and track your progress.</p>
+            <Link href="/auth">
+              <Button className="w-full">Sign In to Learn</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (isLoading && step !== "select") {
     return (
