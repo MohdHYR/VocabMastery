@@ -241,6 +241,9 @@ function BulkUploadForm() {
     }
   };
 
+  const handleUpload = () => {
+    if (!file) return;
+
     const reader = new FileReader();
     reader.onload = (event) => {
       const content = event.target?.result as string;
@@ -308,7 +311,7 @@ function BulkUploadForm() {
             });
           }
         },
-        error: (error) => {
+        error: (error: any) => {
           toast({
             title: "Error",
             description: error.message,
