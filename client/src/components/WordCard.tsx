@@ -41,8 +41,7 @@ export function WordCard({ vocabulary, onPlayAudio, isPlaying }: WordCardProps) 
               </span>
               
               <h2 
-                className="text-6xl md:text-7xl font-display font-bold text-primary tracking-tight cursor-help"
-                onMouseEnter={() => speak(vocabulary.word)}
+                className="text-6xl md:text-7xl font-display font-bold text-primary tracking-tight"
               >
                 {vocabulary.word}
               </h2>

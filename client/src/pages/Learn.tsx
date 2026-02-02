@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, ArrowRight, Check, X, Trophy, RefreshCw } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Loader2, ArrowRight, Check, X, Trophy, RefreshCw, ChevronLeft, ChevronRight, Volume2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Vocabulary } from "@shared/schema";
 
@@ -26,7 +27,8 @@ export default function Learn() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [score, setScore] = useState(0);
-  
+  const [showTestSelection, setShowTestSelection] = useState(false);
+
   // Data Fetching
   const { data: vocabularies, isLoading } = useVocabularies(
     step !== "select" ? { grade: selectedGrade, unit: selectedUnit } : undefined
@@ -99,14 +101,59 @@ export default function Learn() {
           )}
 
           {step === "learning" && vocabularies && (
-            <LearningPhase 
-              key="learning"
-              vocabularies={vocabularies} 
-              onComplete={() => {
-                setCurrentIndex(0);
-                setStep("dictation");
-              }}
-            />
+            <div className="flex flex-col flex-1">
+              <div className="flex justify-center mb-6">
+                <Button 
+                  onClick={() => setShowTestSelection(true)}
+                  className="bg-primary hover:bg-primary/90 text-white font-bold px-8 py-2 rounded-full shadow-lg"
+                  data-testid="button-take-test"
+                >
+                  Take the Test
+                </Button>
+              </div>
+
+              <LearningPhase 
+                key="learning"
+                vocabularies={vocabularies} 
+                onComplete={() => {
+                  setCurrentIndex(0);
+                  setStep("dictation");
+                }}
+              />
+
+              <Dialog open={showTestSelection} onOpenChange={setShowTestSelection}>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl text-center">Choose a Test</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid grid-cols-1 gap-4 pt-4">
+                    <Button 
+                      className="h-24 text-xl flex flex-col gap-2"
+                      onClick={() => {
+                        setShowTestSelection(false);
+                        setStep("dictation");
+                      }}
+                      data-testid="button-select-dictation"
+                    >
+                      <Volume2 className="h-6 w-6" />
+                      Dictation Test
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      className="h-24 text-xl flex flex-col gap-2"
+                      onClick={() => {
+                        setShowTestSelection(false);
+                        setStep("mcq");
+                      }}
+                      data-testid="button-select-mcq"
+                    >
+                      <Check className="h-6 w-6" />
+                      Multiple Choice
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
           )}
 
           {step === "dictation" && vocabularies && (
@@ -222,8 +269,8 @@ function LearningPhase({ vocabularies, onComplete }: { vocabularies: Vocabulary[
     };
 
     (async () => {
-      await speak(currentWord.word, 1.0, 1000); // Normal
-      await speak(currentWord.word, 0.5, 1000); // Slow
+      await speak(currentWord.word, 1.0, 500); // Normal
+      await speak(currentWord.word, 0.5, 500); // Slow
       await speak(currentWord.word, 1.0, 0);    // Normal
       setIsPlaying(false);
     })();
@@ -237,14 +284,19 @@ function LearningPhase({ vocabularies, onComplete }: { vocabularies: Vocabulary[
       clearTimeout(t);
       window.speechSynthesis.cancel();
     };
-  }, [currentWord]);
+  }, [index]); // Explicitly depend on index to play when it changes
 
   const next = () => {
     window.speechSynthesis.cancel();
     if (index < vocabularies.length - 1) {
       setIndex(index + 1);
-    } else {
-      onComplete();
+    }
+  };
+
+  const prev = () => {
+    window.speechSynthesis.cancel();
+    if (index > 0) {
+      setIndex(index - 1);
     }
   };
 
@@ -255,15 +307,35 @@ function LearningPhase({ vocabularies, onComplete }: { vocabularies: Vocabulary[
         <span>{index + 1} / {vocabularies.length}</span>
       </div>
       
-      <WordCard 
-        vocabulary={currentWord} 
-        onPlayAudio={playAudioSequence}
-        isPlaying={isPlaying}
-      />
+      <div className="relative w-full max-w-3xl flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full h-12 w-12 shrink-0 disabled:opacity-30"
+          onClick={prev}
+          disabled={index === 0}
+          data-testid="button-prev-word"
+        >
+          <ChevronLeft className="h-8 w-8 text-primary" />
+        </Button>
 
-      <Button onClick={next} size="lg" className="w-full max-w-sm h-14 text-lg rounded-full">
-        {index === vocabularies.length - 1 ? "Start Quiz" : "Next Word"} <ArrowRight className="ml-2" />
-      </Button>
+        <WordCard 
+          vocabulary={currentWord} 
+          onPlayAudio={playAudioSequence}
+          isPlaying={isPlaying}
+        />
+
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full h-12 w-12 shrink-0 disabled:opacity-30"
+          onClick={next}
+          disabled={index === vocabularies.length - 1}
+          data-testid="button-next-word"
+        >
+          <ChevronRight className="h-8 w-8 text-primary" />
+        </Button>
+      </div>
     </div>
   );
 }
@@ -378,7 +450,6 @@ function DictationTest({ vocabularies, onScore, onComplete }: { vocabularies: Vo
   );
 }
 
-import { Volume2 } from "lucide-react";
 
 function MCQTest({ vocabularies, onScore, onComplete }: { vocabularies: Vocabulary[], onScore: (n: number) => void, onComplete: () => void }) {
   const [index, setIndex] = useState(0);

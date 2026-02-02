@@ -1,0 +1,79 @@
+Please let's modify the existing **Learn Page** only.
+All features mentioned below already exist somewhere in the project unless explicitly stated otherwise.
+Do NOT create mockups, placeholders, or disconnected UI — everything must be fully wired and functional.
+
+====================
+CONTEXT
+====================
+- The Learn Page currently displays a single vocabulary word with:
+  - Main word
+  - Pronunciation icon
+  - Definition
+  - Usage example
+  - Synonyms / Antonyms
+  - A "New Word" button at the bottom
+- Dictation Test flow already exists
+- Multiple Choice Test flow already exists
+- Word navigation logic/data already exists
+
+Use the attached sketch as a visual reference for layout intent.
+
+====================
+REQUIRED CHANGES
+====================
+
+1️⃣ WORD NAVIGATION ARROWS
+- Add a **backward arrow** on the LEFT side of the learn card to navigate to the **previous word**
+- Add a **forward arrow** on the RIGHT side of the learn card to navigate to the **next word**
+- Arrows must:
+  - Be clearly visible but visually subtle
+  - Be keyboard-accessible
+  - Disable automatically when there is no previous or next word
+- Navigation must update the full Learn Page state (word, definition, examples, audio, etc.)
+
+2️⃣ PRONUNCIATION BEHAVIOR CHANGE
+- Disable hover-to-pronounce behavior **for the main word text only**
+- Pronunciation must be triggered automatically when the word pops up for the fisst time and ONLY via the speaker button
+- When the speaker button is clicked:
+  - Play pronunciation **three times in sequence**:
+    1. Normal speed
+    2. Slow speed
+    3. Normal speed again
+- Ensure:
+  - No overlapping audio
+  - Button is temporarily disabled while audio is playing
+  - Works consistently across words
+
+3️⃣ MOVE & RENAME "NEW WORD" BUTTON
+- Move the existing "New Word" button from the bottom of the page to the **top area** (near the word header)
+- Rename the button label to:
+  👉 **"Take the Test"**
+- Style it to feel like a primary action (clean, friendly, inviting — not aggressive)
+- Do NOT break its existing logic — repurpose it
+
+4️⃣ TEST SELECTION FLOW
+- When the user clicks **"Take the Test"**:
+  - Show a clear choice UI with **two options**:
+    1. **Dictation Test**
+    2. **Multiple Choice**
+- Both options must:
+  - Reuse existing test components
+  - Be visually distinct and easy to choose
+- Modify the journey so:
+  - The selected test starts using the **current word context**
+  - After test completion, user can return to the Learn Page seamlessly
+
+5️⃣ FULL INTEGRATION REQUIREMENTS
+- All changes must be:
+  - Fully wired to existing state, routes, or stores
+  - Tested for navigation, audio, and test flow
+  - Free of console errors
+- Maintain existing design language and responsiveness
+- Do not remove or regress any current functionality
+
+====================
+DELIVERABLE
+====================
+- Implement the above changes directly in the codebase
+- Update only what is necessary
+- Ensure everything works end-to-end without manual refreshes
