@@ -249,17 +249,33 @@ function BulkUploadForm() {
       skipEmptyLines: true,
       complete: (results) => {
         try {
-          const formattedData = results.data.map((row: any) => ({
-            grade: row.grade || row.Grade || "",
-            unit: row.unit || row.Unit || "",
-            word: row.word || row.Word || "",
-            meaningEn: row.meaning_en || row.meaningEn || row["Meaning (English)"] || "",
-            meaningAr: row.meaning_ar || row.meaningAr || row["Meaning (Arabic)"] || "",
-            usageEn: row.usage_en || row.usageEn || row["Usage (English)"] || "",
-            usageAr: row.usage_ar || row.usageAr || row["Usage (Arabic)"] || "",
-            synonyms: (row.synonyms || row.Synonyms) ? String(row.synonyms || row.Synonyms).split(',').map((s: string) => s.trim()) : [],
-            antonyms: (row.antonyms || row.Antonyms) ? String(row.antonyms || row.Antonyms).split(',').map((s: string) => s.trim()) : [],
-          }));
+          const formattedData = results.data
+            .filter((row: any) => {
+              // Row must have at least a word or meaning to be considered valid
+              const word = row.word || row.Word || "";
+              const meaning = row.meaning_en || row.meaningEn || row["Meaning (English)"] || "";
+              return String(word).trim() !== "" || String(meaning).trim() !== "";
+            })
+            .map((row: any) => ({
+              grade: String(row.grade || row.Grade || "").trim(),
+              unit: String(row.unit || row.Unit || "").trim(),
+              word: String(row.word || row.Word || "").trim(),
+              meaningEn: String(row.meaning_en || row.meaningEn || row["Meaning (English)"] || "").trim(),
+              meaningAr: String(row.meaning_ar || row.meaningAr || row["Meaning (Arabic)"] || "").trim(),
+              usageEn: String(row.usage_en || row.usageEn || row["Usage (English)"] || "").trim(),
+              usageAr: String(row.usage_ar || row.usageAr || row["Usage (Arabic)"] || "").trim(),
+              synonyms: (row.synonyms || row.Synonyms) ? String(row.synonyms || row.Synonyms).split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+              antonyms: (row.antonyms || row.Antonyms) ? String(row.antonyms || row.Antonyms).split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+            }));
+
+          if (formattedData.length === 0) {
+            toast({
+              title: "Empty File",
+              description: "No valid vocabulary rows found in the CSV.",
+              variant: "destructive"
+            });
+            return;
+          }
 
           const validationResult = z.array(insertVocabularySchema).safeParse(formattedData);
           
