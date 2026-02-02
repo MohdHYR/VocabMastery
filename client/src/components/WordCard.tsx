@@ -10,6 +10,8 @@ interface WordCardProps {
 }
 
 export function WordCard({ vocabulary, onPlayAudio, isPlaying }: WordCardProps) {
+  if (!vocabulary) return null;
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
