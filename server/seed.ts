@@ -1,12 +1,33 @@
 import { storage } from "./storage";
 import { db } from "./db";
+import { users } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 async function seed() {
   console.log("Seeding database...");
 
-  const existing = await storage.getVocabularies();
-  if (existing.length > 0) {
-    console.log("Database already seeded.");
+  // Create admin user
+  const adminUsername = "admin";
+  const adminPassword = "admin";
+  
+  const existingAdmin = await storage.getUserByUsername(adminUsername);
+  if (!existingAdmin) {
+    console.log("Creating admin user...");
+    await db.insert(users).values({
+      username: adminUsername,
+      password: adminPassword,
+      isAdmin: true,
+    });
+  } else {
+    // Ensure existing admin has the requested credentials
+    await db.update(users)
+      .set({ password: adminPassword, isAdmin: true })
+      .where(eq(users.username, adminUsername));
+  }
+
+  const existingVocab = await storage.getVocabularies();
+  if (existingVocab.length > 0) {
+    console.log("Database already has vocabulary.");
     return;
   }
 
@@ -33,28 +54,6 @@ async function seed() {
       synonyms: ["Large", "Huge"],
       usageEn: "That is a big elephant.",
       usageAr: "هذا فيل كبير."
-    },
-    {
-      grade: "1",
-      unit: "1",
-      word: "Fast",
-      meaningEn: "Moving or capable of moving at high speed.",
-      meaningAr: "سريع",
-      antonyms: ["Slow"],
-      synonyms: ["Quick", "Rapid"],
-      usageEn: "Cheetahs are very fast runners.",
-      usageAr: "الفهود عدائون سريعون جداً."
-    },
-    {
-      grade: "2",
-      unit: "1",
-      word: "Discover",
-      meaningEn: "Find unexpectedly or during a search.",
-      meaningAr: "يكتشف",
-      antonyms: ["Hide", "Cover"],
-      synonyms: ["Find", "Uncover"],
-      usageEn: "Scientists discover new things every day.",
-      usageAr: "يكتشف العلماء أشياء جديدة كل يوم."
     }
   ];
 
