@@ -241,83 +241,83 @@ function BulkUploadForm() {
     }
   };
 
-  const handleUpload = () => {
-    if (!file) return;
-
-    const cleanHeader = (h: string) => h.replace(/^\uFEFF/, '').trim();
-
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      beforeFirstChunk: (chunk) => chunk.replace(/^\uFEFF/, ''),
-      complete: (results) => {
-        try {
-          const rows = results.data.map((row: any) => {
-            const newRow: any = {};
-            Object.keys(row).forEach(key => {
-              newRow[cleanHeader(key)] = row[key];
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      Papa.parse(content, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          try {
+            const cleanHeader = (h: string) => h.replace(/^\uFEFF/, '').trim();
+            const rows = results.data.map((row: any) => {
+              const newRow: any = {};
+              Object.keys(row).forEach(key => {
+                newRow[cleanHeader(key)] = row[key];
+              });
+              return newRow;
             });
-            return newRow;
-          });
 
-          const formattedData = rows
-            .filter((row: any) => {
-              const word = row.word || row.Word || "";
-              const meaning = row.meaning_en || row.meaningEn || row["Meaning (English)"] || "";
-              return String(word).trim() !== "" || String(meaning).trim() !== "";
-            })
-            .map((row: any) => ({
-              grade: String(row.grade || row.Grade || "").trim(),
-              unit: String(row.unit || row.Unit || "").trim(),
-              word: String(row.word || row.Word || "").trim(),
-              meaningEn: String(row.meaning_en || row.meaningEn || row["Meaning (English)"] || "").trim(),
-              meaningAr: String(row.meaning_ar || row.meaningAr || row["Meaning (Arabic)"] || "").trim(),
-              usageEn: String(row.usage_en || row.usageEn || row["Usage (English)"] || "").trim(),
-              usageAr: String(row.usage_ar || row.usageAr || row["Usage (Arabic)"] || "").trim(),
-              synonyms: (row.synonyms || row.Synonyms) ? String(row.synonyms || row.Synonyms).split(',').map((s: string) => s.trim()).filter(Boolean) : [],
-              antonyms: (row.antonyms || row.Antonyms) ? String(row.antonyms || row.Antonyms).split(',').map((s: string) => s.trim()).filter(Boolean) : [],
-            }));
+            const formattedData = rows
+              .filter((row: any) => {
+                const word = row.word || row.Word || "";
+                const meaning = row.meaning_en || row.meaningEn || row["Meaning (English)"] || "";
+                return String(word).trim() !== "" || String(meaning).trim() !== "";
+              })
+              .map((row: any) => ({
+                grade: String(row.grade || row.Grade || "").trim(),
+                unit: String(row.unit || row.Unit || "").trim(),
+                word: String(row.word || row.Word || "").trim(),
+                meaningEn: String(row.meaning_en || row.meaningEn || row["Meaning (English)"] || "").trim(),
+                meaningAr: String(row.meaning_ar || row.meaningAr || row["Meaning (Arabic)"] || "").trim(),
+                usageEn: String(row.usage_en || row.usageEn || row["Usage (English)"] || "").trim(),
+                usageAr: String(row.usage_ar || row.usageAr || row["Usage (Arabic)"] || "").trim(),
+                synonyms: (row.synonyms || row.Synonyms) ? String(row.synonyms || row.Synonyms).split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+                antonyms: (row.antonyms || row.Antonyms) ? String(row.antonyms || row.Antonyms).split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+              }));
 
-          if (formattedData.length === 0) {
+            if (formattedData.length === 0) {
+              toast({
+                title: "Empty File",
+                description: "No valid vocabulary rows found in the CSV.",
+                variant: "destructive"
+              });
+              return;
+            }
+
+            const validationResult = z.array(insertVocabularySchema).safeParse(formattedData);
+            
+            if (!validationResult.success) {
+              console.error(validationResult.error);
+              const firstError = validationResult.error.issues[0];
+              const errorMsg = `${firstError.path.join('.')}: ${firstError.message}`;
+              toast({
+                title: "Validation Error",
+                description: `CSV format is incorrect. Error at ${errorMsg}. Ensure headers match: grade, unit, word, meaning_en, meaning_ar, synonyms, antonyms, usage_en, usage_ar`,
+                variant: "destructive"
+              });
+              return;
+            }
+
+            bulkCreate.mutate(validationResult.data);
+          } catch (err) {
             toast({
-              title: "Empty File",
-              description: "No valid vocabulary rows found in the CSV.",
+              title: "Parsing Error",
+              description: "Failed to parse CSV file.",
               variant: "destructive"
             });
-            return;
           }
-
-          const validationResult = z.array(insertVocabularySchema).safeParse(formattedData);
-          
-          if (!validationResult.success) {
-            console.error(validationResult.error);
-            const firstError = validationResult.error.issues[0];
-            const errorMsg = `${firstError.path.join('.')}: ${firstError.message}`;
-            toast({
-              title: "Validation Error",
-              description: `CSV format is incorrect. Error at ${errorMsg}. Ensure headers match: grade, unit, word, meaning_en, meaning_ar, synonyms, antonyms, usage_en, usage_ar`,
-              variant: "destructive"
-            });
-            return;
-          }
-
-          bulkCreate.mutate(validationResult.data);
-        } catch (err) {
+        },
+        error: (error) => {
           toast({
-            title: "Parsing Error",
-            description: "Failed to parse CSV file.",
+            title: "Error",
+            description: error.message,
             variant: "destructive"
           });
         }
-      },
-      error: (error) => {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive"
-        });
-      }
-    });
+      });
+    };
+    reader.readAsText(file, 'UTF-8');
   };
 
   return (
