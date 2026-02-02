@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Upload, FileUp, Save } from "lucide-react";
+import { Loader2, Upload, FileUp, Save, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // Schema for form (handling arrays as strings for input)
@@ -32,17 +32,87 @@ const formSchema = insertVocabularySchema.extend({
 type FormData = z.input<typeof formSchema>;
 
 export default function Admin() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth();
   const { toast } = useToast();
-  
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoggingIn(true);
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        toast({
+          title: "Login Failed",
+          description: "Invalid username or password",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Something went wrong",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
   if (isLoading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>;
   
-  if (!user?.isAdmin) {
+  if (!isAuthenticated || !user?.isAdmin) {
     return (
-      <div className="flex flex-col h-screen items-center justify-center p-4">
-        <h1 className="text-2xl font-bold text-destructive mb-2">Access Denied</h1>
-        <p className="text-muted-foreground mb-4">You do not have permission to view this page.</p>
-        <Button onClick={() => window.location.href = '/'}>Return Home</Button>
+      <div className="flex flex-col h-screen items-center justify-center p-4 bg-muted/30">
+        <Card className="w-full max-w-md shadow-xl border-t-4 border-t-primary">
+          <CardHeader className="text-center space-y-1">
+            <div className="mx-auto bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-2">
+              <Lock className="h-6 w-6 text-primary" />
+            </div>
+            <CardTitle className="text-2xl font-bold">Admin Login</CardTitle>
+            <CardDescription>Enter your teacher credentials to access the dashboard</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input 
+                  id="username" 
+                  value={username} 
+                  onChange={(e) => setUsername(e.target.value)} 
+                  placeholder="admin"
+                  required 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)} 
+                  placeholder="••••••••"
+                  required 
+                />
+              </div>
+              <Button type="submit" className="w-full h-11" disabled={isLoggingIn}>
+                {isLoggingIn ? <Loader2 className="animate-spin mr-2" /> : null}
+                Sign In
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+        <Button variant="ghost" className="mt-4" onClick={() => window.location.href = '/'}>
+          Back to Home
+        </Button>
       </div>
     );
   }
@@ -83,12 +153,6 @@ function ManualEntryForm() {
   const createVocabulary = useCreateVocabulary();
 
   const onSubmit = (data: FormData) => {
-    // The resolver handles the transformation of comma-separated strings to arrays
-    // But react-hook-form passes the Transformed data to onSubmit.
-    // However, insertVocabularySchema expects arrays. 
-    // zodResolver returns the OUTPUT type of the schema.
-    
-    // We need to cast because RHF types are tricky with transformations
     createVocabulary.mutate(data as any, {
       onSuccess: () => reset()
     });
@@ -185,27 +249,25 @@ function BulkUploadForm() {
       skipEmptyLines: true,
       complete: (results) => {
         try {
-          // Transform CSV data to match schema
           const formattedData = results.data.map((row: any) => ({
             grade: row.grade,
             unit: row.unit,
             word: row.word,
-            meaningEn: row.meaning_en,
-            meaningAr: row.meaning_ar,
-            usageEn: row.usage_en,
-            usageAr: row.usage_ar,
+            meaningEn: row.meaning_en || row.meaningEn,
+            meaningAr: row.meaning_ar || row.meaningAr,
+            usageEn: row.usage_en || row.usageEn,
+            usageAr: row.usage_ar || row.usageAr,
             synonyms: row.synonyms ? row.synonyms.split(',').map((s: string) => s.trim()) : [],
             antonyms: row.antonyms ? row.antonyms.split(',').map((s: string) => s.trim()) : [],
           }));
 
-          // Validate with Zod array
           const validationResult = z.array(insertVocabularySchema).safeParse(formattedData);
           
           if (!validationResult.success) {
             console.error(validationResult.error);
             toast({
               title: "Validation Error",
-              description: "CSV format is incorrect. Check console for details.",
+              description: "CSV format is incorrect. Ensure headers match: grade, unit, word, meaning_en, meaning_ar, synonyms, antonyms, usage_en, usage_ar",
               variant: "destructive"
             });
             return;
@@ -249,7 +311,7 @@ function BulkUploadForm() {
               accept=".csv" 
               className="hidden" 
               onChange={handleFileChange} 
-            />
+              />
           </Label>
           {file && <p className="mt-4 text-sm font-medium">{file.name}</p>}
         </div>

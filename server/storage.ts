@@ -5,7 +5,7 @@ import {
   type Vocabulary, type InsertVocabulary,
   type Result, type InsertResult
 } from "@shared/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -42,14 +42,13 @@ export class DatabaseStorage implements IStorage {
 
   async getVocabularies(grade?: string, unit?: string): Promise<Vocabulary[]> {
     let query = db.select().from(vocabularies);
-    const conditions = [];
     
-    if (grade) conditions.push(eq(vocabularies.grade, grade));
-    if (unit) conditions.push(eq(vocabularies.unit, unit));
-
-    if (conditions.length > 0) {
-      // @ts-ignore - Drizzle's where clause handling with arrays can be tricky, but this logic is sound for single conditions
-      return await query.where(...conditions);
+    if (grade && unit) {
+      return await query.where(sql`${vocabularies.grade} = ${grade} AND ${vocabularies.unit} = ${unit}`);
+    } else if (grade) {
+      return await query.where(eq(vocabularies.grade, grade));
+    } else if (unit) {
+      return await query.where(eq(vocabularies.unit, unit));
     }
     
     return await query;
@@ -78,7 +77,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getLeaderboard(): Promise<{ username: string; score: number; createdAt: Date | null }[]> {
-    // Top 10 scores
     return await db
       .select({
         username: users.username,
@@ -92,4 +90,5 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
+import { sql } from "drizzle-orm";
 export const storage = new DatabaseStorage();
