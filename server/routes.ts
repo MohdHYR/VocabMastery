@@ -25,7 +25,7 @@ export async function registerRoutes(
     })
   );
 
-  // Manual Login Route for Admin
+  // Manual Login Route for Admin and Students
   app.post("/api/login", async (req, res) => {
     const { username, password } = req.body;
     const user = await storage.getUserByUsername(username);
@@ -35,7 +35,32 @@ export async function registerRoutes(
       return res.json(user);
     }
     
-    res.status(401).json({ message: "Invalid credentials" });
+    res.status(401).json({ message: "Invalid username or password" });
+  });
+
+  app.post("/api/register", async (req, res) => {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json({ message: "Username and password are required" });
+    }
+
+    const existingUser = await storage.getUserByUsername(username);
+    if (existingUser) {
+      return res.status(400).json({ message: "Username already exists" });
+    }
+
+    try {
+      const user = await storage.createUser({
+        username,
+        password,
+        isAdmin: false
+      });
+      (req.session as any).userId = user.id;
+      res.status(201).json(user);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to create account" });
+    }
   });
 
   app.post("/api/logout", (req, res) => {
