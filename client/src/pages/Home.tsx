@@ -16,17 +16,17 @@ export default function Home() {
       
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-20 pb-32">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent -z-10" />
+        <div className="absolute inset-0 bg-muted/50 -z-10" />
         <div className="container mx-auto px-4 text-center max-w-4xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <span className="inline-block px-4 py-1.5 rounded-full bg-secondary/20 text-secondary-foreground font-semibold text-sm mb-6">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-secondary text-secondary-foreground font-semibold text-sm mb-6">
               Master Vocabulary the Fun Way
             </span>
-            <h1 className="text-5xl md:text-7xl font-display font-bold leading-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60 pb-2">
+            <h1 className="text-5xl md:text-7xl font-display font-bold leading-tight mb-6 text-primary pb-2">
               Elevate Your English Skills
             </h1>
             <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
@@ -35,12 +35,12 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/learn">
-                <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 hover:shadow-2xl hover:scale-105 transition-all">
+                <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-lg hover:scale-105 transition-all">
                   Start Learning Now <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
               <Link href="/admin">
-                <Button variant="outline" size="lg" className="h-14 px-8 text-lg rounded-full border-2 hover:bg-muted/50">
+                <Button variant="outline" size="lg" className="h-14 px-8 text-lg rounded-full border-2 hover:bg-muted">
                   Teacher Dashboard
                 </Button>
               </Link>
@@ -73,20 +73,20 @@ export default function Home() {
       </section>
 
       {/* Leaderboard Section */}
-      <section className="py-20 bg-muted/30">
+      <section className="py-20 bg-muted">
         <div className="container mx-auto px-4 max-w-3xl">
           <div className="flex items-center justify-center gap-3 mb-10">
             <Trophy className="h-8 w-8 text-yellow-500" />
             <h2 className="text-3xl font-display font-bold">Top Learners</h2>
           </div>
 
-          <Card className="border-none shadow-xl bg-white/50 backdrop-blur">
+          <Card className="border-none shadow-xl bg-white">
             <CardContent className="p-0">
               {isLoading ? (
                 <div className="p-8 text-center text-muted-foreground">Loading scores...</div>
               ) : (
                 <div className="divide-y">
-                  <div className="grid grid-cols-12 gap-4 p-4 bg-muted/50 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  <div className="grid grid-cols-12 gap-4 p-4 bg-muted text-xs font-bold text-muted-foreground uppercase tracking-wider">
                     <div className="col-span-2 text-center">Rank</div>
                     <div className="col-span-6">Student</div>
                     <div className="col-span-4 text-right">Score</div>
@@ -97,7 +97,7 @@ export default function Home() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-muted/20 transition-colors"
+                      className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-muted transition-colors"
                     >
                       <div className="col-span-2 flex justify-center">
                         <span className={`
@@ -133,7 +133,7 @@ export default function Home() {
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
   return (
-    <div className="p-8 rounded-2xl bg-muted/20 border border-border hover:border-primary/50 transition-colors duration-300">
+    <div className="p-8 rounded-2xl bg-muted border border-border hover:border-primary transition-colors duration-300">
       <div className="mb-4 bg-white w-16 h-16 rounded-xl shadow-sm flex items-center justify-center">
         {icon}
       </div>

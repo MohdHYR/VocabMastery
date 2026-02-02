@@ -22,7 +22,7 @@ export function NavBar() {
   const [location] = useLocation();
 
   return (
-    <nav className="border-b bg-card text-card-foreground sticky top-0 z-[100] shadow-sm">
+    <nav className="border-b bg-background text-foreground sticky top-0 z-[100] shadow-sm">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <div className="bg-primary p-1.5 rounded-lg">
