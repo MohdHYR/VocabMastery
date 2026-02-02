@@ -244,10 +244,20 @@ function BulkUploadForm() {
   const handleUpload = () => {
     if (!file) return;
 
+    // First, let's try to detect if it's UTF-8 or something else (like Windows-1256 for Arabic)
     const reader = new FileReader();
     reader.onload = (event) => {
-      const content = event.target?.result as string;
-      Papa.parse(content, {
+      const arrayBuffer = event.target?.result as ArrayBuffer;
+      const decoder = new TextDecoder('utf-8');
+      const text = decoder.decode(arrayBuffer);
+      
+      // If we see replacement characters, it's probably not UTF-8
+      const hasErrors = text.includes('\uFFFD');
+      const finalEncoding = hasErrors ? 'windows-1256' : 'utf-8';
+      
+      const finalText = new TextDecoder(finalEncoding).decode(arrayBuffer);
+
+      Papa.parse(finalText, {
         header: true,
         skipEmptyLines: true,
         complete: (results) => {
@@ -320,7 +330,7 @@ function BulkUploadForm() {
         }
       });
     };
-    reader.readAsText(file, 'UTF-8');
+    reader.readAsArrayBuffer(file);
   };
 
   return (
