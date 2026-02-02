@@ -244,55 +244,39 @@ function BulkUploadForm() {
   const handleUpload = () => {
     if (!file) return;
 
-          Papa.parse(file, {
-            header: true,
-            skipEmptyLines: true,
-            encoding: "UTF-8",
-            complete: (results) => {
-              // ...
-            }
+    const cleanHeader = (h: string) => h.replace(/^\uFEFF/, '').trim();
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      beforeFirstChunk: (chunk) => chunk.replace(/^\uFEFF/, ''),
+      complete: (results) => {
+        try {
+          const rows = results.data.map((row: any) => {
+            const newRow: any = {};
+            Object.keys(row).forEach(key => {
+              newRow[cleanHeader(key)] = row[key];
+            });
+            return newRow;
           });
-        }
 
-        // Add a helper to check for BOM or weird characters in headers
-        const cleanHeader = (h: string) => h.replace(/^\uFEFF/, '').trim();
-
-        Papa.parse(file, {
-          header: true,
-          skipEmptyLines: true,
-          beforeFirstChunk: (chunk) => {
-            // Remove BOM if present
-            return chunk.replace(/^\uFEFF/, '');
-          },
-          complete: (results) => {
-            try {
-              // Map headers to clean versions to handle BOM or extra spaces
-              const rows = results.data.map((row: any) => {
-                const newRow: any = {};
-                Object.keys(row).forEach(key => {
-                  newRow[cleanHeader(key)] = row[key];
-                });
-                return newRow;
-              });
-
-              const formattedData = rows
-                .filter((row: any) => {
-                  // Row must have at least a word or meaning to be considered valid
-                  const word = row.word || row.Word || "";
-                  const meaning = row.meaning_en || row.meaningEn || row["Meaning (English)"] || "";
-                  return String(word).trim() !== "" || String(meaning).trim() !== "";
-                })
-                .map((row: any) => ({
-                  grade: String(row.grade || row.Grade || "").trim(),
-                  unit: String(row.unit || row.Unit || "").trim(),
-                  word: String(row.word || row.Word || "").trim(),
-                  meaningEn: String(row.meaning_en || row.meaningEn || row["Meaning (English)"] || "").trim(),
-                  meaningAr: String(row.meaning_ar || row.meaningAr || row["Meaning (Arabic)"] || "").trim(),
-                  usageEn: String(row.usage_en || row.usageEn || row["Usage (English)"] || "").trim(),
-                  usageAr: String(row.usage_ar || row.usageAr || row["Usage (Arabic)"] || "").trim(),
-                  synonyms: (row.synonyms || row.Synonyms) ? String(row.synonyms || row.Synonyms).split(',').map((s: string) => s.trim()).filter(Boolean) : [],
-                  antonyms: (row.antonyms || row.Antonyms) ? String(row.antonyms || row.Antonyms).split(',').map((s: string) => s.trim()).filter(Boolean) : [],
-                }));
+          const formattedData = rows
+            .filter((row: any) => {
+              const word = row.word || row.Word || "";
+              const meaning = row.meaning_en || row.meaningEn || row["Meaning (English)"] || "";
+              return String(word).trim() !== "" || String(meaning).trim() !== "";
+            })
+            .map((row: any) => ({
+              grade: String(row.grade || row.Grade || "").trim(),
+              unit: String(row.unit || row.Unit || "").trim(),
+              word: String(row.word || row.Word || "").trim(),
+              meaningEn: String(row.meaning_en || row.meaningEn || row["Meaning (English)"] || "").trim(),
+              meaningAr: String(row.meaning_ar || row.meaningAr || row["Meaning (Arabic)"] || "").trim(),
+              usageEn: String(row.usage_en || row.usageEn || row["Usage (English)"] || "").trim(),
+              usageAr: String(row.usage_ar || row.usageAr || row["Usage (Arabic)"] || "").trim(),
+              synonyms: (row.synonyms || row.Synonyms) ? String(row.synonyms || row.Synonyms).split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+              antonyms: (row.antonyms || row.Antonyms) ? String(row.antonyms || row.Antonyms).split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+            }));
 
           if (formattedData.length === 0) {
             toast({
