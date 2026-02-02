@@ -250,24 +250,26 @@ function BulkUploadForm() {
       complete: (results) => {
         try {
           const formattedData = results.data.map((row: any) => ({
-            grade: row.grade,
-            unit: row.unit,
-            word: row.word,
-            meaningEn: row.meaning_en || row.meaningEn,
-            meaningAr: row.meaning_ar || row.meaningAr,
-            usageEn: row.usage_en || row.usageEn,
-            usageAr: row.usage_ar || row.usageAr,
-            synonyms: row.synonyms ? row.synonyms.split(',').map((s: string) => s.trim()) : [],
-            antonyms: row.antonyms ? row.antonyms.split(',').map((s: string) => s.trim()) : [],
+            grade: row.grade || row.Grade || "",
+            unit: row.unit || row.Unit || "",
+            word: row.word || row.Word || "",
+            meaningEn: row.meaning_en || row.meaningEn || row["Meaning (English)"] || "",
+            meaningAr: row.meaning_ar || row.meaningAr || row["Meaning (Arabic)"] || "",
+            usageEn: row.usage_en || row.usageEn || row["Usage (English)"] || "",
+            usageAr: row.usage_ar || row.usageAr || row["Usage (Arabic)"] || "",
+            synonyms: (row.synonyms || row.Synonyms) ? String(row.synonyms || row.Synonyms).split(',').map((s: string) => s.trim()) : [],
+            antonyms: (row.antonyms || row.Antonyms) ? String(row.antonyms || row.Antonyms).split(',').map((s: string) => s.trim()) : [],
           }));
 
           const validationResult = z.array(insertVocabularySchema).safeParse(formattedData);
           
           if (!validationResult.success) {
             console.error(validationResult.error);
+            const firstError = validationResult.error.issues[0];
+            const errorMsg = `${firstError.path.join('.')}: ${firstError.message}`;
             toast({
               title: "Validation Error",
-              description: "CSV format is incorrect. Ensure headers match: grade, unit, word, meaning_en, meaning_ar, synonyms, antonyms, usage_en, usage_ar",
+              description: `CSV format is incorrect. Error at ${errorMsg}. Ensure headers match: grade, unit, word, meaning_en, meaning_ar, synonyms, antonyms, usage_en, usage_ar`,
               variant: "destructive"
             });
             return;
