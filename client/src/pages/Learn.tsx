@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, ArrowRight, Check, X, Trophy, RefreshCw, ChevronLeft, ChevronRight, Volume2 } from "lucide-react";
+import { Loader2, ArrowRight, Check, X, Trophy, RefreshCw, Play, Volume2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Vocabulary } from "@shared/schema";
 
@@ -311,12 +311,12 @@ function LearningPhase({ vocabularies, onComplete }: { vocabularies: Vocabulary[
         <Button
           variant="default"
           size="icon"
-          className="rounded-full h-12 w-12 shrink-0 bg-primary hover:bg-primary/90 text-white shadow-md transition-all hover:scale-110 active:scale-95 disabled:opacity-30"
+          className="rounded-full h-12 w-12 shrink-0 bg-primary hover:bg-primary/90 text-white shadow-md transition-all hover:scale-110 active:scale-95 disabled:opacity-30 flex items-center justify-center"
           onClick={prev}
           disabled={index === 0}
           data-testid="button-prev-word"
         >
-          <ChevronLeft className="h-8 w-8" />
+          <Play className="h-6 w-6 rotate-180" fill="currentColor" />
         </Button>
 
         <WordCard 
@@ -328,12 +328,12 @@ function LearningPhase({ vocabularies, onComplete }: { vocabularies: Vocabulary[
         <Button
           variant="default"
           size="icon"
-          className="rounded-full h-12 w-12 shrink-0 bg-primary hover:bg-primary/90 text-white shadow-md transition-all hover:scale-110 active:scale-95 disabled:opacity-30"
+          className="rounded-full h-12 w-12 shrink-0 bg-primary hover:bg-primary/90 text-white shadow-md transition-all hover:scale-110 active:scale-95 disabled:opacity-30 flex items-center justify-center"
           onClick={next}
           disabled={index === vocabularies.length - 1}
           data-testid="button-next-word"
         >
-          <ChevronRight className="h-8 w-8" />
+          <Play className="h-6 w-6" fill="currentColor" />
         </Button>
       </div>
     </div>
