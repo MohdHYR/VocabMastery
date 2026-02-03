@@ -309,14 +309,14 @@ function LearningPhase({ vocabularies, onComplete }: { vocabularies: Vocabulary[
       
       <div className="relative w-full max-w-3xl flex items-center gap-4">
         <Button
-          variant="ghost"
+          variant="default"
           size="icon"
-          className="rounded-full h-12 w-12 shrink-0 disabled:opacity-30"
+          className="rounded-full h-12 w-12 shrink-0 bg-primary hover:bg-primary/90 text-white shadow-md transition-all hover:scale-110 active:scale-95 disabled:opacity-30"
           onClick={prev}
           disabled={index === 0}
           data-testid="button-prev-word"
         >
-          <ChevronLeft className="h-8 w-8 text-primary" />
+          <ChevronLeft className="h-8 w-8" />
         </Button>
 
         <WordCard 
@@ -326,14 +326,14 @@ function LearningPhase({ vocabularies, onComplete }: { vocabularies: Vocabulary[
         />
 
         <Button
-          variant="ghost"
+          variant="default"
           size="icon"
-          className="rounded-full h-12 w-12 shrink-0 disabled:opacity-30"
+          className="rounded-full h-12 w-12 shrink-0 bg-primary hover:bg-primary/90 text-white shadow-md transition-all hover:scale-110 active:scale-95 disabled:opacity-30"
           onClick={next}
           disabled={index === vocabularies.length - 1}
           data-testid="button-next-word"
         >
-          <ChevronRight className="h-8 w-8 text-primary" />
+          <ChevronRight className="h-8 w-8" />
         </Button>
       </div>
     </div>
