@@ -7,18 +7,18 @@ export function useSubmitResult() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (score: number) => {
+    mutationFn: async (data: { score: number; grade?: string; unit?: string }) => {
       const res = await fetch(api.results.create.path, {
         method: api.results.create.method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ score }),
+        body: JSON.stringify(data),
       });
 
       if (!res.ok) {
         if (res.status === 401) throw new Error("You must be logged in to save results.");
         throw new Error("Failed to save result");
       }
-      return api.results.create.responses[201].parse(await res.json());
+      return await res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.leaderboard.list.path] });

@@ -1,0 +1,86 @@
+Please modify existing features only — do NOT create mock data, placeholders, or disconnected UI.
+All logic must be fully wired to the real database, state, and routing.
+
+====================
+SCOPE
+====================
+Modify the following areas:
+- Top Learners Board
+- Dictation Test flow
+- Choose a Test screen
+- Choose Your Lesson screen
+
+====================
+REQUIRED CHANGES
+====================
+
+1️⃣ TOP LEARNERS BOARD — SCORE BY GRADE & UNIT
+- Modify the "Top Learners" board to:
+  - Display learner scores **per Grade Level** and **per Unit Number**
+  - Allow sorting and filtering the leaderboard by:
+    - Grade level
+    - Unit number
+- Filters must:
+  - Be dropdown-based
+  - Be populated dynamically from the database
+  - Update the leaderboard instantly without page reload
+- The leaderboard should clearly reflect:
+  - Selected grade(s)
+  - Selected unit(s)
+  - Correct ranking based on score within that scope
+- Maintain current design language and performance
+
+2️⃣ DICTATION TEST COMPLETION FLOW
+- After a user finishes the **Dictation Test**:
+  - Do NOT automatically start the Multiple Choice test
+  - Instead, redirect the user back to the **"Choose a Test"** screen
+- Preserve:
+  - Current lesson context (grade, unit, word set)
+  - User progress state
+
+3️⃣ EXPAND "CHOOSE A TEST" OPTIONS
+- Modify the "Choose a Test" screen to include **four options**:
+  1. Dictation Test
+  2. Multiple Choice Test
+  3. Go to Learn
+  4. Go to Home
+- All options must:
+  - Be clearly distinguishable
+  - Be fully functional
+  - Use existing routes/components
+- Navigation must be seamless and state-aware (no resets unless intended)
+
+4️⃣ DYNAMIC DROPDOWNS IN "CHOOSE YOUR LESSON"
+- In the "Choose Your Lesson" screen:
+  - Replace any static inputs for:
+    - Grade Level
+    - Unit Number
+  - With **dropdown lists**
+- Dropdown values must:
+  - Be fetched dynamically from the database
+  - Reflect only available grades and units
+  - Update the available Unit list when a Grade is selected
+- Ensure:
+  - No invalid grade/unit combinations can be selected
+  - Clean UX with loading states if needed
+
+====================
+INTEGRATION & QUALITY
+====================
+- All changes must be:
+  - Fully wired and functional
+  - Integrated with existing state, database, and routing
+  - Free of console errors
+- Do NOT break or remove any existing features
+- Follow current coding patterns and architecture
+- Ensure responsiveness and accessibility remain intact
+
+====================
+DELIVERABLE
+====================
+- Implement all changes directly in the codebase
+- Test all flows end-to-end:
+  - Leaderboard filtering
+  - Dictation completion
+  - Test selection navigation
+  - Lesson selection logic

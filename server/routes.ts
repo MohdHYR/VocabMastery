@@ -131,7 +131,9 @@ export async function registerRoutes(
 
   // Leaderboard & Results
   app.get(api.leaderboard.list.path, async (req, res) => {
-    const leaderboard = await storage.getLeaderboard();
+    const grade = req.query.grade as string | undefined;
+    const unit = req.query.unit as string | undefined;
+    const leaderboard = await storage.getLeaderboard(grade, unit);
     res.json(leaderboard);
   });
 

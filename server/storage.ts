@@ -21,7 +21,7 @@ export interface IStorage {
 
   // Result methods
   createResult(result: InsertResult): Promise<Result>;
-  getLeaderboard(): Promise<{ username: string; score: number; createdAt: Date | null }[]>;
+  getLeaderboard(grade?: string, unit?: string): Promise<{ username: string; score: number; grade: string | null; unit: string | null; createdAt: Date | null }[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -76,17 +76,36 @@ export class DatabaseStorage implements IStorage {
     return newResult;
   }
 
-  async getLeaderboard(): Promise<{ username: string; score: number; createdAt: Date | null }[]> {
-    return await db
+  async getLeaderboard(grade?: string, unit?: string): Promise<{ username: string; score: number; grade: string | null; unit: string | null; createdAt: Date | null }[]> {
+    const query = db
       .select({
         username: users.username,
         score: results.score,
+        grade: results.grade,
+        unit: results.unit,
         createdAt: results.createdAt
       })
       .from(results)
-      .innerJoin(users, eq(results.userId, users.id))
-      .orderBy(desc(results.score))
-      .limit(10);
+      .innerJoin(users, eq(results.userId, users.id));
+
+    if (grade && unit) {
+      return await query
+        .where(sql`${results.grade} = ${grade} AND ${results.unit} = ${unit}`)
+        .orderBy(desc(results.score))
+        .limit(10);
+    } else if (grade) {
+      return await query
+        .where(eq(results.grade, grade))
+        .orderBy(desc(results.score))
+        .limit(10);
+    } else if (unit) {
+      return await query
+        .where(eq(results.unit, unit))
+        .orderBy(desc(results.score))
+        .limit(10);
+    }
+
+    return await query.orderBy(desc(results.score)).limit(10);
   }
 }
 

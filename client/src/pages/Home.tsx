@@ -2,13 +2,28 @@ import { Link } from "wouter";
 import { useLeaderboard } from "@/hooks/use-leaderboard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowRight, Trophy, Sparkles, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { NavBar } from "@/components/NavBar";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Home() {
-  const { data: leaderboard, isLoading } = useLeaderboard();
+  const [filters, setFilters] = useState<{ grade?: string; unit?: string }>({});
+  const { data: leaderboard, isLoading } = useLeaderboard(filters);
+  const { data: metadata } = useQuery<{ grade: string, unit: string }[]>({
+    queryKey: ["/api/metadata/grades-units"],
+    queryFn: async () => {
+      const res = await fetch("/api/metadata/grades-units");
+      if (!res.ok) throw new Error("Failed to fetch metadata");
+      return await res.json();
+    }
+  });
+
+  const grades = Array.from(new Set(metadata?.map(m => m.grade) || [])).sort();
+  const units = Array.from(new Set(metadata?.filter(m => !filters.grade || m.grade === filters.grade).map(m => m.unit) || [])).sort();
 
   return (
     <div className="min-h-screen bg-background font-sans">
@@ -75,9 +90,37 @@ export default function Home() {
       {/* Leaderboard Section */}
       <section className="py-20 bg-muted">
         <div className="container mx-auto px-4 max-w-3xl">
-          <div className="flex items-center justify-center gap-3 mb-10">
-            <Trophy className="h-8 w-8 text-yellow-500" />
-            <h2 className="text-3xl font-display font-bold">Top Learners</h2>
+          <div className="flex items-center justify-between gap-3 mb-10 flex-wrap">
+            <div className="flex items-center gap-3">
+              <Trophy className="h-8 w-8 text-yellow-500" />
+              <h2 className="text-3xl font-display font-bold">Top Learners</h2>
+            </div>
+            
+            <div className="flex gap-4">
+              <Select value={filters.grade || "all"} onValueChange={(v) => setFilters(f => ({ ...f, grade: v === "all" ? undefined : v, unit: undefined }))}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Grade" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Grades</SelectItem>
+                  {grades.map(g => (
+                    <SelectItem key={g} value={g}>Grade {g}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={filters.unit || "all"} onValueChange={(v) => setFilters(f => ({ ...f, unit: v === "all" ? undefined : v }))}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Units</SelectItem>
+                  {units.map(u => (
+                    <SelectItem key={u} value={u}>Unit {u}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <Card className="border-none shadow-xl bg-white">
@@ -91,7 +134,7 @@ export default function Home() {
                     <div className="col-span-6">Student</div>
                     <div className="col-span-4 text-right">Score</div>
                   </div>
-                  {leaderboard?.map((entry, index) => (
+                  {leaderboard?.map((entry: any, index: number) => (
                     <motion.div 
                       key={index}
                       initial={{ opacity: 0, x: -20 }}
@@ -111,7 +154,10 @@ export default function Home() {
                       </div>
                       <div className="col-span-6 font-medium flex flex-col">
                         <span className="text-foreground">{entry.username}</span>
-                        <span className="text-xs text-muted-foreground">{format(new Date(entry.createdAt), 'MMM d, yyyy')}</span>
+                        <div className="flex gap-2 items-center">
+                          <span className="text-xs text-muted-foreground">{format(new Date(entry.createdAt), 'MMM d, yyyy')}</span>
+                          {entry.grade && <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground">G{entry.grade} U{entry.unit}</span>}
+                        </div>
                       </div>
                       <div className="col-span-4 text-right font-display font-bold text-primary">
                         {entry.score} pts

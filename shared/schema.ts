@@ -32,6 +32,8 @@ export const results = pgTable("results", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
   score: integer("score").notNull(),
+  grade: text("grade"),
+  unit: text("unit"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, ArrowRight, Check, X, Trophy, RefreshCw, Play, Volume2 } from "lucide-react";
+import { Loader2, ArrowRight, Check, X, Trophy, RefreshCw, Play, Volume2, BookOpen, Home as HomeIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Vocabulary } from "@shared/schema";
 
@@ -102,57 +102,18 @@ export default function Learn() {
 
           {step === "learning" && vocabularies && (
             <div className="flex flex-col flex-1">
-              <div className="flex justify-center mb-6">
-                <Button 
-                  onClick={() => setShowTestSelection(true)}
-                  className="bg-primary hover:bg-primary/90 text-white font-bold px-8 py-2 rounded-full shadow-lg"
-                  data-testid="button-take-test"
-                >
-                  Take the Test
-                </Button>
-              </div>
-
               <LearningPhase 
                 key="learning"
                 vocabularies={vocabularies} 
-                onComplete={() => {
-                  setCurrentIndex(0);
-                  setStep("dictation");
+                grade={selectedGrade}
+                unit={selectedUnit}
+                onComplete={(nextStep: string) => {
+                  setStep(nextStep as Step);
+                  if (nextStep === "dictation" || nextStep === "mcq") {
+                    setCurrentIndex(0);
+                  }
                 }}
               />
-
-              <Dialog open={showTestSelection} onOpenChange={setShowTestSelection}>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle className="text-2xl text-center">Choose a Test</DialogTitle>
-                  </DialogHeader>
-                  <div className="grid grid-cols-1 gap-4 pt-4">
-                    <Button 
-                      className="h-24 text-xl flex flex-col gap-2"
-                      onClick={() => {
-                        setShowTestSelection(false);
-                        setStep("dictation");
-                      }}
-                      data-testid="button-select-dictation"
-                    >
-                      <Volume2 className="h-6 w-6" />
-                      Dictation Test
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      className="h-24 text-xl flex flex-col gap-2"
-                      onClick={() => {
-                        setShowTestSelection(false);
-                        setStep("mcq");
-                      }}
-                      data-testid="button-select-mcq"
-                    >
-                      <Check className="h-6 w-6" />
-                      Multiple Choice
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
             </div>
           )}
 
@@ -162,8 +123,12 @@ export default function Learn() {
               vocabularies={vocabularies}
               onScore={(points) => setScore(prev => prev + points)}
               onComplete={() => {
-                setCurrentIndex(0);
-                setStep("mcq");
+                setStep("learning"); // Redirect back to learning/selection
+                setTimeout(() => {
+                  // Trigger the dialog in the learning phase
+                  const takeTestBtn = document.querySelector('[data-testid="button-take-test"]') as HTMLButtonElement;
+                  if (takeTestBtn) takeTestBtn.click();
+                }, 200);
               }}
             />
           )}
@@ -174,7 +139,7 @@ export default function Learn() {
               vocabularies={vocabularies}
               onScore={(points) => setScore(prev => prev + points)}
               onComplete={() => {
-                submitResult.mutate(score); // Save score
+                submitResult.mutate({ score, grade: selectedGrade, unit: selectedUnit }); // Save score with context
                 setStep("summary");
               }}
             />
@@ -197,13 +162,21 @@ export default function Learn() {
 // === SUB-COMPONENTS ===
 
 function SelectionScreen({ onStart }: { onStart: (grade: string, unit: string) => void }) {
+  const { data: metadata, isLoading } = useQuery<{ grade: string, unit: string }[]>({
+    queryKey: ["/api/metadata/grades-units"],
+    queryFn: async () => {
+      const res = await fetch("/api/metadata/grades-units");
+      if (!res.ok) throw new Error("Failed to fetch metadata");
+      return await res.json();
+    }
+  });
+
   const [grade, setGrade] = useState("");
   const [unit, setUnit] = useState("");
 
-  // In a real app, we might fetch available grades/units from API
-  // For now, let's hardcode some options or allow text input if desired
-  // Assuming simple text inputs for flexibility as per prompt requirements
-  
+  const grades = Array.from(new Set(metadata?.map(m => m.grade) || [])).sort();
+  const units = Array.from(new Set(metadata?.filter(m => m.grade === grade).map(m => m.unit) || [])).sort();
+
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
@@ -219,21 +192,29 @@ function SelectionScreen({ onStart }: { onStart: (grade: string, unit: string) =
         <CardContent className="space-y-6 pt-6">
           <div className="space-y-2 text-left">
             <label className="text-sm font-medium">Grade Level</label>
-            <Input 
-              placeholder="e.g. 5" 
-              value={grade} 
-              onChange={(e) => setGrade(e.target.value)}
-              className="h-12 text-lg"
-            />
+            <Select value={grade} onValueChange={(v) => { setGrade(v); setUnit(""); }}>
+              <SelectTrigger className="h-12 text-lg">
+                <SelectValue placeholder="Select Grade" />
+              </SelectTrigger>
+              <SelectContent>
+                {grades.map(g => (
+                  <SelectItem key={g} value={g}>Grade {g}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2 text-left">
             <label className="text-sm font-medium">Unit Number</label>
-            <Input 
-              placeholder="e.g. 1" 
-              value={unit} 
-              onChange={(e) => setUnit(e.target.value)}
-              className="h-12 text-lg"
-            />
+            <Select value={unit} onValueChange={setUnit} disabled={!grade}>
+              <SelectTrigger className="h-12 text-lg">
+                <SelectValue placeholder="Select Unit" />
+              </SelectTrigger>
+              <SelectContent>
+                {units.map(u => (
+                  <SelectItem key={u} value={u}>Unit {u}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <Button 
             size="lg" 
@@ -249,10 +230,13 @@ function SelectionScreen({ onStart }: { onStart: (grade: string, unit: string) =
   );
 }
 
-function LearningPhase({ vocabularies, onComplete }: { vocabularies: Vocabulary[], onComplete: () => void }) {
+import { useQuery } from "@tanstack/react-query";
+
+function LearningPhase({ vocabularies, onComplete, grade, unit }: { vocabularies: Vocabulary[], onComplete: (test: string) => void, grade: string, unit: string }) {
   const [index, setIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const currentWord = vocabularies[index];
+  const [showTestSelection, setShowTestSelection] = useState(false);
 
   const playAudioSequence = () => {
     if (isPlaying || !currentWord) return;
@@ -302,6 +286,16 @@ function LearningPhase({ vocabularies, onComplete }: { vocabularies: Vocabulary[
 
   return (
     <div className="flex flex-col items-center justify-center flex-1 space-y-8">
+      <div className="flex justify-center mb-6">
+        <Button 
+          onClick={() => setShowTestSelection(true)}
+          className="bg-primary hover:bg-primary/90 text-white font-bold px-8 py-2 rounded-full shadow-lg"
+          data-testid="button-take-test"
+        >
+          Take the Test
+        </Button>
+      </div>
+
       <div className="w-full max-w-2xl flex justify-between items-center text-sm font-medium text-muted-foreground">
         <span>Learning Mode</span>
         <span>{index + 1} / {vocabularies.length}</span>
@@ -336,7 +330,65 @@ function LearningPhase({ vocabularies, onComplete }: { vocabularies: Vocabulary[
           <Play className="h-6 w-6" fill="currentColor" />
         </Button>
       </div>
+
+      <TestSelectionDialog 
+        open={showTestSelection} 
+        onOpenChange={setShowTestSelection}
+        onSelect={(test: string) => {
+          setShowTestSelection(false);
+          onComplete(test);
+        }}
+      />
     </div>
+  );
+}
+
+function TestSelectionDialog({ open, onOpenChange, onSelect }: { open: boolean, onOpenChange: (open: boolean) => void, onSelect: (test: string) => void }) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-2xl text-center">Choose a Test</DialogTitle>
+        </DialogHeader>
+        <div className="grid grid-cols-1 gap-4 pt-4">
+          <Button 
+            className="h-24 text-xl flex flex-col gap-2"
+            onClick={() => onSelect("dictation")}
+            data-testid="button-select-dictation"
+          >
+            <Volume2 className="h-6 w-6" />
+            Dictation Test
+          </Button>
+          <Button 
+            variant="outline"
+            className="h-24 text-xl flex flex-col gap-2"
+            onClick={() => onSelect("mcq")}
+            data-testid="button-select-mcq"
+          >
+            <Check className="h-6 w-6" />
+            Multiple Choice
+          </Button>
+          <Button 
+            variant="secondary"
+            className="h-24 text-xl flex flex-col gap-2"
+            onClick={() => onSelect("learn")}
+            data-testid="button-select-learn"
+          >
+            <BookOpen className="h-6 w-6" />
+            Go to Learn
+          </Button>
+          <Button 
+            variant="ghost"
+            className="h-24 text-xl flex flex-col gap-2"
+            onClick={() => onSelect("home")}
+            data-testid="button-select-home"
+          >
+            <HomeIcon className="h-6 w-6" />
+            Go to Home
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
