@@ -1,0 +1,94 @@
+You are working inside the existing "VocabMastery" web application.
+Your task is to refactor the **Top Learners** leaderboard filtering UX and logic.
+Use the attached screenshots as visual and behavioral references.
+
+====================
+KEY DESIGN DECISION
+====================
+- REMOVE the Grade and Unit dropdown filters from the top-right corner
+- Filtering must be done **inside the table header itself**
+- Filters must support **multi-select via checkboxes**, similar to the provided example
+
+====================
+REQUIRED CHANGES
+====================
+
+1️⃣ TABLE STRUCTURE (FINAL)
+The Top Learners table must have the following columns:
+- Rank
+- Student
+- Grade
+- Unit
+- Score
+
+Grade and Unit must:
+- Be visible per row
+- Be real values (not placeholders or badges)
+- Reflect the score’s actual context
+
+2️⃣ COLUMN-LEVEL FILTER UI (GRADE & UNIT)
+For both **Grade** and **Unit** columns:
+- Add a filter icon or clickable header area
+- Clicking the header opens a **popover / dropdown panel**
+- The panel must contain:
+  - A list of **checkboxes**
+  - One checkbox per available Grade or Unit
+  - Values loaded dynamically from the database
+
+Filter behavior:
+- Users can select **multiple Grades and/or Units**
+- Filters apply instantly (no submit button)
+- Closing the popover keeps the filters active
+- Active filters should be visually indicated in the header
+
+3️⃣ FILTER LOGIC (MANDATORY)
+Filtering logic must follow this exact rule:
+
+Include a row IF:
+- (Grade is in selectedGrades OR no grades selected)
+AND
+- (Unit is in selectedUnits OR no units selected)
+
+Additional rules:
+- Grade and Unit filters must work together
+- Filters must NOT reset each other
+- Clearing all checkboxes returns the full dataset
+
+4️⃣ RANKING RECALCULATION
+- Apply filters FIRST
+- Sort filtered results by:
+  - Score descending
+- Recalculate Rank dynamically based on filtered results
+- Handle ties correctly:
+  - Same score → same rank
+- Rank must update immediately when filters change
+
+5️⃣ EMPTY & EDGE STATES
+- If no rows match filters:
+  - Show a friendly empty state inside the table
+- Filters must still be accessible in empty state
+- No console errors or broken UI states
+
+6️⃣ TECHNICAL & UX CONSTRAINTS
+- Do NOT use hard-coded Grade or Unit values
+- Do NOT reintroduce top-right dropdown filters
+- Use existing state management and data sources
+- Follow existing UI patterns (popover, checkbox styles, spacing)
+- Ensure keyboard accessibility for filter panels
+
+====================
+QUALITY BAR
+====================
+- Filtering is real, not visual-only
+- Multiple selections work correctly
+- Ranking remains accurate at all times
+- Code is clean, readable, and maintainable
+- No regressions to existing leaderboard behavior
+
+====================
+DELIVERABLE
+====================
+Implement all changes so that:
+- Grade and Unit filtering is done directly from the table header
+- Users can select multiple values using checkboxes
+- Leaderboard updates correctly and intuitively

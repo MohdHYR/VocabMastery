@@ -3,12 +3,12 @@ import { useLeaderboard } from "@/hooks/use-leaderboard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
-  DropdownMenu, 
-  DropdownMenuCheckboxItem, 
-  DropdownMenuContent, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { ArrowRight, Trophy, Sparkles, BookOpen, ChevronDown, X } from "lucide-react";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ArrowRight, Trophy, Sparkles, BookOpen, Filter } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { NavBar } from "@/components/NavBar";
@@ -39,31 +39,21 @@ export default function Home() {
     [metadata]
   );
 
-  const availableUnits = useMemo(() => {
-    const filtered = metadata?.filter(m => 
-      selectedGrades.length === 0 || selectedGrades.includes(m.grade)
-    ) || [];
-    return Array.from(new Set(filtered.map(m => m.unit))).sort();
-  }, [metadata, selectedGrades]);
+  const allUnits = useMemo(() => 
+    Array.from(new Set(metadata?.map(m => m.unit) || [])).sort(), 
+    [metadata]
+  );
 
   const toggleGrade = (grade: string) => {
     setSelectedGrades(prev => 
       prev.includes(grade) ? prev.filter(g => g !== grade) : [...prev, grade]
     );
-    // When changing grades, we don't automatically clear units unless they become invalid
-    // But requirement says "Unit options should update automatically when Grade filters change"
-    // and "Never show invalid grade–unit combinations"
   };
 
   const toggleUnit = (unit: string) => {
     setSelectedUnits(prev => 
       prev.includes(unit) ? prev.filter(u => u !== unit) : [...prev, unit]
     );
-  };
-
-  const clearFilters = () => {
-    setSelectedGrades([]);
-    setSelectedUnits([]);
   };
 
   return (
@@ -131,81 +121,9 @@ export default function Home() {
       {/* Leaderboard Section */}
       <section className="py-20 bg-muted">
         <div className="container mx-auto px-4 max-w-4xl">
-          <div className="flex flex-col gap-6 mb-10">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <div className="flex items-center gap-3">
-                <Trophy className="h-8 w-8 text-yellow-500" />
-                <h2 className="text-3xl font-display font-bold">Top Learners</h2>
-              </div>
-              
-              <div className="flex gap-3 flex-wrap">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="min-w-[140px] justify-between">
-                      {selectedGrades.length === 0 ? "All Grades" : `Grades (${selectedGrades.length})`}
-                      <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56">
-                    {allGrades.map(g => (
-                      <DropdownMenuCheckboxItem
-                        key={g}
-                        checked={selectedGrades.includes(g)}
-                        onCheckedChange={() => toggleGrade(g)}
-                      >
-                        Grade {g}
-                      </DropdownMenuCheckboxItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="min-w-[140px] justify-between">
-                      {selectedUnits.length === 0 ? "All Units" : `Units (${selectedUnits.length})`}
-                      <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56">
-                    {availableUnits.map(u => (
-                      <DropdownMenuCheckboxItem
-                        key={u}
-                        checked={selectedUnits.includes(u)}
-                        onCheckedChange={() => toggleUnit(u)}
-                      >
-                        Unit {u}
-                      </DropdownMenuCheckboxItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                {(selectedGrades.length > 0 || selectedUnits.length > 0) && (
-                  <Button variant="ghost" size="icon" onClick={clearFilters} className="rounded-full">
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            {/* Filter Chips */}
-            <div className="flex flex-wrap gap-2">
-              {selectedGrades.map(g => (
-                <Badge key={`g-${g}`} variant="secondary" className="pl-2 pr-1 py-1 gap-1">
-                  Grade {g}
-                  <button onClick={() => toggleGrade(g)} className="hover:bg-muted rounded-full p-0.5">
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-              {selectedUnits.map(u => (
-                <Badge key={`u-${u}`} variant="secondary" className="pl-2 pr-1 py-1 gap-1">
-                  Unit {u}
-                  <button onClick={() => toggleUnit(u)} className="hover:bg-muted rounded-full p-0.5">
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
+          <div className="flex items-center gap-3 mb-10">
+            <Trophy className="h-8 w-8 text-yellow-500" />
+            <h2 className="text-3xl font-display font-bold">Top Learners</h2>
           </div>
 
           <Card className="border-none shadow-xl bg-white overflow-hidden">
@@ -217,43 +135,104 @@ export default function Home() {
                   <div className="grid grid-cols-12 gap-4 p-4 bg-muted text-xs font-bold text-muted-foreground uppercase tracking-wider min-w-[600px]">
                     <div className="col-span-1 text-center">Rank</div>
                     <div className="col-span-4">Student</div>
-                    <div className="col-span-2 text-center">Grade</div>
-                    <div className="col-span-2 text-center">Unit</div>
+                    
+                    <div className="col-span-2 text-center flex items-center justify-center gap-1">
+                      <span>Grade</span>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="ghost" size="sm" className={`h-6 w-6 p-0 hover:bg-muted-foreground/10 ${selectedGrades.length > 0 ? 'text-primary' : ''}`}>
+                            <Filter className="h-3 w-3" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-48 p-2" align="center">
+                          <div className="space-y-2">
+                            <h4 className="font-medium text-sm px-2 py-1 border-b">Filter Grade</h4>
+                            <div className="max-h-60 overflow-y-auto px-1 pt-1">
+                              {allGrades.map(g => (
+                                <div key={g} className="flex items-center space-x-2 px-2 py-1.5 hover:bg-muted rounded-sm cursor-pointer" onClick={() => toggleGrade(g)}>
+                                  <Checkbox checked={selectedGrades.includes(g)} onCheckedChange={() => {}} />
+                                  <span className="text-sm">Grade {g}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <div className="col-span-2 text-center flex items-center justify-center gap-1">
+                      <span>Unit</span>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="ghost" size="sm" className={`h-6 w-6 p-0 hover:bg-muted-foreground/10 ${selectedUnits.length > 0 ? 'text-primary' : ''}`}>
+                            <Filter className="h-3 w-3" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-48 p-2" align="center">
+                          <div className="space-y-2">
+                            <h4 className="font-medium text-sm px-2 py-1 border-b">Filter Unit</h4>
+                            <div className="max-h-60 overflow-y-auto px-1 pt-1">
+                              {allUnits.map(u => (
+                                <div key={u} className="flex items-center space-x-2 px-2 py-1.5 hover:bg-muted rounded-sm cursor-pointer" onClick={() => toggleUnit(u)}>
+                                  <Checkbox checked={selectedUnits.includes(u)} onCheckedChange={() => {}} />
+                                  <span className="text-sm">Unit {u}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
                     <div className="col-span-3 text-right">Score</div>
                   </div>
-                  {leaderboard?.map((entry: any, index: number) => (
-                    <motion.div 
-                      key={`${entry.username}-${index}`}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-muted/50 transition-colors min-w-[600px]"
-                    >
-                      <div className="col-span-1 flex justify-center">
-                        <span className={`
-                          flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold
-                          ${index === 0 ? 'bg-yellow-100 text-yellow-700' : 
-                            index === 1 ? 'bg-slate-100 text-slate-700' :
-                            index === 2 ? 'bg-orange-100 text-orange-700' : 'text-muted-foreground'}
-                        `}>
-                          {index + 1}
-                        </span>
-                      </div>
-                      <div className="col-span-4 font-medium flex flex-col">
-                        <span className="text-foreground">{entry.username}</span>
-                        <span className="text-[10px] text-muted-foreground">{format(new Date(entry.createdAt), 'MMM d, yyyy')}</span>
-                      </div>
-                      <div className="col-span-2 text-center">
-                        <Badge variant="outline" className="font-semibold">Grade {entry.grade}</Badge>
-                      </div>
-                      <div className="col-span-2 text-center">
-                        <Badge variant="outline" className="font-semibold">Unit {entry.unit}</Badge>
-                      </div>
-                      <div className="col-span-3 text-right font-display font-bold text-primary">
-                        {entry.score} pts
-                      </div>
-                    </motion.div>
-                  ))}
+
+                  {leaderboard?.map((entry: any, index: number) => {
+                    // Recalculate rank handling ties
+                    let rank = index + 1;
+                    if (index > 0 && entry.score === leaderboard[index - 1].score) {
+                      // Find the first index with this score
+                      let firstIdx = index;
+                      while (firstIdx > 0 && leaderboard[firstIdx - 1].score === entry.score) {
+                        firstIdx--;
+                      }
+                      rank = firstIdx + 1;
+                    }
+
+                    return (
+                      <motion.div 
+                        key={`${entry.username}-${index}`}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-muted/50 transition-colors min-w-[600px]"
+                      >
+                        <div className="col-span-1 flex justify-center">
+                          <span className={`
+                            flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold
+                            ${rank === 1 ? 'bg-yellow-100 text-yellow-700' : 
+                              rank === 2 ? 'bg-slate-100 text-slate-700' :
+                              rank === 3 ? 'bg-orange-100 text-orange-700' : 'text-muted-foreground'}
+                          `}>
+                            {rank}
+                          </span>
+                        </div>
+                        <div className="col-span-4 font-medium flex flex-col">
+                          <span className="text-foreground">{entry.username}</span>
+                          <span className="text-[10px] text-muted-foreground">{format(new Date(entry.createdAt), 'MMM d, yyyy')}</span>
+                        </div>
+                        <div className="col-span-2 text-center text-sm font-semibold text-muted-foreground">
+                          {entry.grade}
+                        </div>
+                        <div className="col-span-2 text-center text-sm font-semibold text-muted-foreground">
+                          {entry.unit}
+                        </div>
+                        <div className="col-span-3 text-right font-display font-bold text-primary">
+                          {entry.score} pts
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                   {leaderboard?.length === 0 && (
                     <div className="p-8 text-center text-muted-foreground">No scores yet. Be the first!</div>
                   )}
