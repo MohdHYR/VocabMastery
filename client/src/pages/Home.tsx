@@ -56,6 +56,22 @@ export default function Home() {
     );
   };
 
+  const toggleAllGrades = () => {
+    if (selectedGrades.length === allGrades.length) {
+      setSelectedGrades([]);
+    } else {
+      setSelectedGrades([...allGrades]);
+    }
+  };
+
+  const toggleAllUnits = () => {
+    if (selectedUnits.length === allUnits.length) {
+      setSelectedUnits([]);
+    } else {
+      setSelectedUnits([...allUnits]);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background font-sans">
       <NavBar />
@@ -144,12 +160,34 @@ export default function Home() {
                             <Filter className="h-3 w-3" />
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-48 p-2" align="center">
+                        <PopoverContent className="w-48 p-2" align="center" onEscapeKeyDown={(e) => e.stopPropagation()} onPointerDownOutside={(e) => e.stopPropagation()}>
                           <div className="space-y-2">
                             <h4 className="font-medium text-sm px-2 py-1 border-b">Filter Grade</h4>
                             <div className="max-h-60 overflow-y-auto px-1 pt-1">
+                              <div 
+                                className="flex items-center space-x-2 px-2 py-1.5 hover:bg-muted rounded-sm cursor-pointer border-b mb-1" 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  toggleAllGrades();
+                                }}
+                              >
+                                <Checkbox 
+                                  checked={allGrades.length > 0 && selectedGrades.length === allGrades.length} 
+                                  onCheckedChange={() => {}} 
+                                />
+                                <span className="text-sm font-bold">Select All</span>
+                              </div>
                               {allGrades.map(g => (
-                                <div key={g} className="flex items-center space-x-2 px-2 py-1.5 hover:bg-muted rounded-sm cursor-pointer" onClick={() => toggleGrade(g)}>
+                                <div 
+                                  key={g} 
+                                  className="flex items-center space-x-2 px-2 py-1.5 hover:bg-muted rounded-sm cursor-pointer" 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toggleGrade(g);
+                                  }}
+                                >
                                   <Checkbox checked={selectedGrades.includes(g)} onCheckedChange={() => {}} />
                                   <span className="text-sm">Grade {g}</span>
                                 </div>
@@ -168,12 +206,34 @@ export default function Home() {
                             <Filter className="h-3 w-3" />
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-48 p-2" align="center">
+                        <PopoverContent className="w-48 p-2" align="center" onEscapeKeyDown={(e) => e.stopPropagation()} onPointerDownOutside={(e) => e.stopPropagation()}>
                           <div className="space-y-2">
                             <h4 className="font-medium text-sm px-2 py-1 border-b">Filter Unit</h4>
                             <div className="max-h-60 overflow-y-auto px-1 pt-1">
+                              <div 
+                                className="flex items-center space-x-2 px-2 py-1.5 hover:bg-muted rounded-sm cursor-pointer border-b mb-1" 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  toggleAllUnits();
+                                }}
+                              >
+                                <Checkbox 
+                                  checked={allUnits.length > 0 && selectedUnits.length === allUnits.length} 
+                                  onCheckedChange={() => {}} 
+                                />
+                                <span className="text-sm font-bold">Select All</span>
+                              </div>
                               {allUnits.map(u => (
-                                <div key={u} className="flex items-center space-x-2 px-2 py-1.5 hover:bg-muted rounded-sm cursor-pointer" onClick={() => toggleUnit(u)}>
+                                <div 
+                                  key={u} 
+                                  className="flex items-center space-x-2 px-2 py-1.5 hover:bg-muted rounded-sm cursor-pointer" 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toggleUnit(u);
+                                  }}
+                                >
                                   <Checkbox checked={selectedUnits.includes(u)} onCheckedChange={() => {}} />
                                   <span className="text-sm">Unit {u}</span>
                                 </div>
@@ -222,10 +282,10 @@ export default function Home() {
                           <span className="text-[10px] text-muted-foreground">{format(new Date(entry.createdAt), 'MMM d, yyyy')}</span>
                         </div>
                         <div className="col-span-2 text-center text-sm font-semibold text-muted-foreground">
-                          {entry.grade}
+                          <Badge variant="outline" className="font-mono">{entry.grade}</Badge>
                         </div>
                         <div className="col-span-2 text-center text-sm font-semibold text-muted-foreground">
-                          {entry.unit}
+                          <Badge variant="outline" className="font-mono">{entry.unit}</Badge>
                         </div>
                         <div className="col-span-3 text-right font-display font-bold text-primary">
                           {entry.score} pts

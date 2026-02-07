@@ -1,0 +1,80 @@
+You are working inside the existing "VocabMastery" web application.
+Your task is to enhance the **Top Learners** leaderboard table filtering behavior.
+All changes must be fully wired to real data and state. No mock data, no placeholders.
+
+Use the existing table-header filter implementation as the base.
+
+====================
+OBJECTIVE
+====================
+Improve Grade and Unit filtering in the Top Learners board to support:
+- Clear visibility of selected values per row
+- Select-all capability
+- Non-closing selection panels
+- Instant, seamless table updates
+
+====================
+REQUIRED CHANGES
+====================
+
+1️⃣ SHOW SELECTED GRADE & UNIT VALUES PER ROW
+- Each table row must clearly display:
+  - The actual Grade value used for that score
+  - The actual Unit value used for that score
+- Display must:
+  - Reflect the currently selected filters
+  - Update immediately when filters change
+- Do NOT show placeholders, generic badges, or static labels
+
+2️⃣ ADD “SELECT ALL” OPTION PER FILTER
+For BOTH Grade and Unit column filters:
+- Add a **“Select All” checkbox** at the top of the filter list
+- Behavior rules:
+  - Clicking “Select All” selects all available values
+  - Unchecking it clears all selections
+  - If all individual items are selected → “Select All” appears checked
+- Must stay synchronized with individual selections
+
+3️⃣ KEEP FILTER PANEL OPEN DURING SELECTION
+- When a user opens the Grade or Unit filter panel:
+  - The panel must stay open while selecting/deselecting checkboxes
+  - The panel must close ONLY when:
+    - The user clicks outside the panel
+    - OR presses Escape
+- No auto-close on checkbox click
+
+4️⃣ INSTANT TABLE UPDATES (NO LOADING)
+- The table must update:
+  - Instantly on each checkbox selection or deselection
+  - Without page reload
+  - Without loading spinners
+- Filtering and ranking logic must be efficient and reactive
+- Rank must be recalculated immediately after filtering
+
+====================
+FILTER & RANK LOGIC (MANDATORY)
+====================
+- Apply Grade and Unit filters using AND logic
+- If no values selected in a filter → include all
+- Apply filters FIRST
+- Sort filtered results by Score (descending)
+- Recalculate Rank dynamically based on filtered results
+- Handle ties correctly (same score → same rank)
+
+====================
+UX & QUALITY REQUIREMENTS
+====================
+- Active filters should be visually indicated in the column header
+- Empty states must be handled gracefully
+- No hard-coded Grade or Unit values
+- No console errors
+- Maintain current design system and accessibility patterns
+
+====================
+DELIVERABLE
+====================
+Implement all changes so that:
+- Grade and Unit values are clearly visible per row
+- Users can select all or multiple filter values
+- Filter panels stay open until dismissed intentionally
+- The leaderboard updates instantly and smoothly
