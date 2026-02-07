@@ -25,23 +25,17 @@ export default function Home() {
     unit: selectedUnits 
   });
 
-  const { data: metadata } = useQuery<{ grade: string, unit: string }[]>({
-    queryKey: ["/api/metadata/grades-units"],
-    queryFn: async () => {
-      const res = await fetch("/api/metadata/grades-units");
-      if (!res.ok) throw new Error("Failed to fetch metadata");
-      return await res.json();
-    }
-  });
+  // Fetch all scores to determine available filters in the leaderboard
+  const { data: allScores } = useLeaderboard({});
 
   const allGrades = useMemo(() => 
-    Array.from(new Set(metadata?.map(m => m.grade) || [])).sort(), 
-    [metadata]
+    Array.from(new Set(allScores?.map(m => String(m.grade)) || [])).sort(), 
+    [allScores]
   );
 
   const allUnits = useMemo(() => 
-    Array.from(new Set(metadata?.map(m => m.unit) || [])).sort(), 
-    [metadata]
+    Array.from(new Set(allScores?.map(m => String(m.unit)) || [])).sort(), 
+    [allScores]
   );
 
   const toggleGrade = (grade: string) => {
@@ -160,8 +154,14 @@ export default function Home() {
                             <Filter className="h-3 w-3" />
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-48 p-2" align="center" onEscapeKeyDown={(e) => e.stopPropagation()} onPointerDownOutside={(e) => e.stopPropagation()}>
-                          <div className="space-y-2">
+                        <PopoverContent 
+                          className="w-48 p-2" 
+                          align="center" 
+                          onInteractOutside={(e) => {
+                            // Standard popover behavior for clicking completely outside
+                          }}
+                        >
+                          <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
                             <h4 className="font-medium text-sm px-2 py-1 border-b">Filter Grade</h4>
                             <div className="max-h-60 overflow-y-auto px-1 pt-1">
                               <div 
@@ -206,8 +206,14 @@ export default function Home() {
                             <Filter className="h-3 w-3" />
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-48 p-2" align="center" onEscapeKeyDown={(e) => e.stopPropagation()} onPointerDownOutside={(e) => e.stopPropagation()}>
-                          <div className="space-y-2">
+                        <PopoverContent 
+                          className="w-48 p-2" 
+                          align="center"
+                          onInteractOutside={(e) => {
+                            // Standard popover behavior for clicking completely outside
+                          }}
+                        >
+                          <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
                             <h4 className="font-medium text-sm px-2 py-1 border-b">Filter Unit</h4>
                             <div className="max-h-60 overflow-y-auto px-1 pt-1">
                               <div 
