@@ -1,0 +1,91 @@
+You are working inside the existing "VocabMastery" web application.
+Your task is to enhance the existing **Top Learners** leaderboard.
+All data already exists in the database — do NOT create mock data.
+
+Use the attached screenshot as a visual reference.
+
+====================
+OBJECTIVE
+====================
+- Show **Grade** and **Unit** as part of the leaderboard table itself
+- Allow **multi-select filtering** (not single-select) for Grade and Unit
+- Keep everything fully wired, functional, and performant
+
+====================
+REQUIRED CHANGES
+====================
+
+1️⃣ TABLE STRUCTURE UPDATE
+Modify the Top Learners table to include:
+- Columns in this order:
+  - Rank
+  - Student
+  - Grade
+  - Unit
+  - Score
+
+Each row must clearly display:
+- The student's grade level
+- The unit number associated with the score
+
+The table must:
+- Sort correctly by Score (descending) within the active filter set
+- Recalculate Rank dynamically when filters change
+
+2️⃣ MULTI-SELECT FILTERS (GRADE & UNIT)
+Replace the current single-select dropdowns with:
+- **Multi-select filters** for:
+  - Grade
+  - Unit
+- Users must be able to:
+  - Select multiple grades at once (e.g., Grade 5 + Grade 6)
+  - Select multiple units at once
+  - Use Grade-only, Unit-only, or combined filtering
+
+Filter behavior:
+- If no Grade is selected → include all grades
+- If no Unit is selected → include all units
+- Filters must work together using AND logic
+- Filtering must update results instantly without page reload
+
+3️⃣ DYNAMIC FILTER OPTIONS
+- Grade and Unit filter options must:
+  - Be fetched dynamically from the database
+  - Reflect only existing data
+- Unit options should:
+  - Update automatically when Grade filters change
+  - Never show invalid grade–unit combinations
+
+4️⃣ UX & VISUAL REQUIREMENTS
+- Filters should:
+  - Be clearly labeled ("Grade", "Unit")
+  - Show selected values as chips/tags or checkmarks
+- Table should:
+  - Show a friendly empty state if no results match the filters
+  - Maintain existing design language and spacing
+
+5️⃣ DATA & STATE INTEGRATION
+- All filtering must:
+  - Be handled via real query logic or in-memory filtering (depending on existing architecture)
+  - Preserve performance for large datasets
+- Do NOT break:
+  - Existing leaderboard logic
+  - Scoring calculations
+  - User ranking consistency
+
+====================
+QUALITY BAR
+====================
+- No hard-coded values
+- No UI-only changes without logic
+- No console errors
+- Fully tested filter combinations
+- Clean, readable code aligned with existing patterns
+
+====================
+DELIVERABLE
+====================
+Implement the above changes directly in the codebase so that:
+- Grade and Unit are visible in the table
+- Multiple Grades and Units can be selected at the same time
+- Leaderboard updates correctly and intuitively

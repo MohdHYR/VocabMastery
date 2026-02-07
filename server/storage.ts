@@ -5,7 +5,7 @@ import {
   type Vocabulary, type InsertVocabulary,
   type Result, type InsertResult
 } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, inArray, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -14,14 +14,14 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
 
   // Vocabulary methods
-  getVocabularies(grade?: string, unit?: string): Promise<Vocabulary[]>;
+  getVocabularies(grade?: string | string[], unit?: string | string[]): Promise<Vocabulary[]>;
   createVocabulary(vocab: InsertVocabulary): Promise<Vocabulary>;
   bulkCreateVocabularies(vocabs: InsertVocabulary[]): Promise<Vocabulary[]>;
   getUniqueGradesAndUnits(): Promise<{ grade: string; unit: string }[]>;
 
   // Result methods
   createResult(result: InsertResult): Promise<Result>;
-  getLeaderboard(grade?: string, unit?: string): Promise<{ username: string; score: number; grade: string | null; unit: string | null; createdAt: Date | null }[]>;
+  getLeaderboard(grade?: string | string[], unit?: string | string[]): Promise<{ username: string; score: number; grade: string | null; unit: string | null; createdAt: Date | null }[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -40,15 +40,27 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getVocabularies(grade?: string, unit?: string): Promise<Vocabulary[]> {
+  async getVocabularies(grade?: string | string[], unit?: string | string[]): Promise<Vocabulary[]> {
     let query = db.select().from(vocabularies);
     
-    if (grade && unit) {
-      return await query.where(sql`${vocabularies.grade} = ${grade} AND ${vocabularies.unit} = ${unit}`);
-    } else if (grade) {
-      return await query.where(eq(vocabularies.grade, grade));
-    } else if (unit) {
-      return await query.where(eq(vocabularies.unit, unit));
+    const conditions = [];
+    if (grade) {
+      if (Array.isArray(grade)) {
+        if (grade.length > 0) conditions.push(inArray(vocabularies.grade, grade));
+      } else {
+        conditions.push(eq(vocabularies.grade, grade));
+      }
+    }
+    if (unit) {
+      if (Array.isArray(unit)) {
+        if (unit.length > 0) conditions.push(inArray(vocabularies.unit, unit));
+      } else {
+        conditions.push(eq(vocabularies.unit, unit));
+      }
+    }
+
+    if (conditions.length > 0) {
+      return await query.where(and(...conditions));
     }
     
     return await query;
@@ -76,7 +88,7 @@ export class DatabaseStorage implements IStorage {
     return newResult;
   }
 
-  async getLeaderboard(grade?: string, unit?: string): Promise<{ username: string; score: number; grade: string | null; unit: string | null; createdAt: Date | null }[]> {
+  async getLeaderboard(grade?: string | string[], unit?: string | string[]): Promise<{ username: string; score: number; grade: string | null; unit: string | null; createdAt: Date | null }[]> {
     const query = db
       .select({
         username: users.username,
@@ -88,26 +100,28 @@ export class DatabaseStorage implements IStorage {
       .from(results)
       .innerJoin(users, eq(results.userId, users.id));
 
-    if (grade && unit) {
-      return await query
-        .where(sql`${results.grade} = ${grade} AND ${results.unit} = ${unit}`)
-        .orderBy(desc(results.score))
-        .limit(10);
-    } else if (grade) {
-      return await query
-        .where(eq(results.grade, grade))
-        .orderBy(desc(results.score))
-        .limit(10);
-    } else if (unit) {
-      return await query
-        .where(eq(results.unit, unit))
-        .orderBy(desc(results.score))
-        .limit(10);
+    const conditions = [];
+    if (grade) {
+      if (Array.isArray(grade)) {
+        if (grade.length > 0) conditions.push(inArray(results.grade, grade));
+      } else {
+        conditions.push(eq(results.grade, grade));
+      }
+    }
+    if (unit) {
+      if (Array.isArray(unit)) {
+        if (unit.length > 0) conditions.push(inArray(results.unit, unit));
+      } else {
+        conditions.push(eq(results.unit, unit));
+      }
+    }
+
+    if (conditions.length > 0) {
+      query.where(and(...conditions));
     }
 
     return await query.orderBy(desc(results.score)).limit(10);
   }
 }
 
-import { sql } from "drizzle-orm";
 export const storage = new DatabaseStorage();

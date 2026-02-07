@@ -82,9 +82,9 @@ export async function registerRoutes(
 
   // Vocabularies
   app.get(api.vocabularies.list.path, async (req, res) => {
-    const grade = req.query.grade as string | undefined;
-    const unit = req.query.unit as string | undefined;
-    const vocabs = await storage.getVocabularies(grade, unit);
+    const grade = req.query.grade;
+    const unit = req.query.unit;
+    const vocabs = await storage.getVocabularies(grade as string | string[], unit as string | string[]);
     res.json(vocabs);
   });
 
@@ -131,9 +131,9 @@ export async function registerRoutes(
 
   // Leaderboard & Results
   app.get(api.leaderboard.list.path, async (req, res) => {
-    const grade = req.query.grade as string | undefined;
-    const unit = req.query.unit as string | undefined;
-    const leaderboard = await storage.getLeaderboard(grade, unit);
+    const grade = req.query.grade;
+    const unit = req.query.unit;
+    const leaderboard = await storage.getLeaderboard(grade as string | string[], unit as string | string[]);
     res.json(leaderboard);
   });
 
