@@ -29,12 +29,12 @@ export default function Home() {
   const { data: allScores } = useLeaderboard({});
 
   const allGrades = useMemo(() => 
-    Array.from(new Set(allScores?.map(m => String(m.grade)) || [])).sort(), 
+    Array.from(new Set(allScores?.map(m => String(m.grade)) || [])).sort() as string[], 
     [allScores]
   );
 
   const allUnits = useMemo(() => 
-    Array.from(new Set(allScores?.map(m => String(m.unit)) || [])).sort(), 
+    Array.from(new Set(allScores?.map(m => String(m.unit)) || [])).sort() as string[], 
     [allScores]
   );
 
